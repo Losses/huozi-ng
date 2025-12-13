@@ -100,10 +100,11 @@ export default function HuoziApp() {
   const [pageWidth, setPageWidth] = useState(800);
   
   // Padding State (Split)
-  const [paddingTop, setPaddingTop] = useState(DEFAULT_OPTIONS.padding.top);
-  const [paddingRight, setPaddingRight] = useState(DEFAULT_OPTIONS.padding.right);
-  const [paddingBottom, setPaddingBottom] = useState(DEFAULT_OPTIONS.padding.bottom);
-  const [paddingLeft, setPaddingLeft] = useState(DEFAULT_OPTIONS.padding.left);
+  const defaultPadding = DEFAULT_OPTIONS.padding as { top: number, right: number, bottom: number, left: number };
+  const [paddingTop, setPaddingTop] = useState(defaultPadding.top);
+  const [paddingRight, setPaddingRight] = useState(defaultPadding.right);
+  const [paddingBottom, setPaddingBottom] = useState(defaultPadding.bottom);
+  const [paddingLeft, setPaddingLeft] = useState(defaultPadding.left);
 
   const [viewPage, setViewPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -285,7 +286,7 @@ export default function HuoziApp() {
                         
                         <div className="border-t border-gray-200 my-3"></div>
                         <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">Padding</label>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="flex flex-col gap-1">
                             <NumberControl label="Top" value={paddingTop} onChange={setPaddingTop} min={0} max={200} step={5} className="mb-0" />
                             <NumberControl label="Bottom" value={paddingBottom} onChange={setPaddingBottom} min={0} max={200} step={5} className="mb-0" />
                             <NumberControl label="Left" value={paddingLeft} onChange={setPaddingLeft} min={0} max={200} step={5} className="mb-0" />
@@ -300,7 +301,7 @@ export default function HuoziApp() {
                 {!enablePagination && (
                     <div className="space-y-1 bg-gray-50 p-3 rounded-md border border-gray-200">
                         <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">Padding</label>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="flex flex-col gap-1">
                             <NumberControl label="Top" value={paddingTop} onChange={setPaddingTop} min={0} max={200} step={5} className="mb-0" />
                             <NumberControl label="Bottom" value={paddingBottom} onChange={setPaddingBottom} min={0} max={200} step={5} className="mb-0" />
                             <NumberControl label="Left" value={paddingLeft} onChange={setPaddingLeft} min={0} max={200} step={5} className="mb-0" />
