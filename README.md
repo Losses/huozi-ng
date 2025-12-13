@@ -5,10 +5,26 @@ Refactored and modernized version of the original Huozi.js engine.
 
 ## Installation
 
+Install directly from GitHub:
+
+**Bun**
 ```bash
-bun add huozi-ng
-# or
-npm install huozi-ng
+bun add github:Losses/huozi-ng
+```
+
+**NPM**
+```bash
+npm install github:Losses/huozi-ng
+```
+
+**Yarn**
+```bash
+yarn add github:Losses/huozi-ng
+```
+
+**PNPM**
+```bash
+pnpm add github:Losses/huozi-ng
 ```
 
 ## Usage
@@ -32,6 +48,13 @@ engine.setOptions({
   yInterval: 12,      // Vertical gap between lines
   xInterval: 0,       // Horizontal gap between characters
   inlineCompression: true, // Enable punctuation compression
+  // Padding can be a number or an object with directional values
+  padding: {
+    top: 60,
+    right: 40,
+    bottom: 60,
+    left: 40
+  }
 });
 
 // 3. Perform layout
