@@ -333,7 +333,7 @@ export default function HuoziApp() {
         {/* Canvas Output */}
         <div className="lg:col-span-2">
 
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-5">
             <div className="flex items-center gap-2 mb-4 text-indigo-600">
               <Type size={20} />
               <h2 className="font-bold text-lg">Input Text</h2>
@@ -344,12 +344,7 @@ export default function HuoziApp() {
                 onChange={e => setText(e.target.value)}
             />
           </div>
-            <div className="bg-white p-1 rounded-xl shadow-lg border border-gray-200 overflow-hidden" ref={containerRef}>
-                <div className="bg-gray-50 border-b p-2 flex justify-between items-center text-xs text-gray-400 uppercase tracking-widest">
-                    <span>Canvas Preview</span>
-                    <span className="truncate max-w-[200px]" title={options.fontFamily}>{options.fontFamily.split(',')[0]?.replace(/"/g, '')}</span>
-                </div>
-                
+            <div className="bg-white p-1 rounded-xl shadow-lg border border-gray-200 overflow-hidden" ref={containerRef}>            
                 {/* Scrollable Area */}
                 <div className="overflow-auto max-h-[800px] p-8 flex justify-center bg-gray-100 min-h-[500px]">
                     <canvas ref={canvasRef} className="shadow-lg border border-gray-200 bg-white" />
