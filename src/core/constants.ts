@@ -24,6 +24,11 @@ export const DEFAULT_OPTIONS: LayoutOptions = {
   pageHeight: 1000,
   layoutColumnCount: 1,
   layoutColumnGap: 40,
-  padding: 60,
+  padding: {
+    top: 60,
+    right: 60,
+    bottom: 60,
+    left: 60
+  },
   row: Infinity // Default to infinite rows if not specified
 };

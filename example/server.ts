@@ -1,4 +1,3 @@
-console.log("Starting server script...");
 import { serve } from "bun";
 import index from "./index.html";
 

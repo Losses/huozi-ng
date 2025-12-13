@@ -15,7 +15,7 @@ export interface LayoutOptions {
   pageHeight: number;
   layoutColumnCount: number;
   layoutColumnGap: number;
-  padding: number;
+  padding: number | { top: number; right: number; bottom: number; left: number };
   // Added row to match usage in engine
   row?: number; 
 }

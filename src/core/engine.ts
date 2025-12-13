@@ -78,7 +78,8 @@ export class HuoziEngine {
     if (!ctx) return;
 
     const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
-    const { enablePagination, pageWidth, pageHeight, padding, gridSize, xInterval, column, layoutColumnCount, layoutColumnGap } = this.options;
+    const { enablePagination, pageWidth, pageHeight, gridSize, xInterval, column, layoutColumnCount, layoutColumnGap } = this.options;
+    const padding = this.resolvePadding(this.options.padding);
 
     // Determine Dimensions
     let canvasWidth, canvasHeight;
@@ -94,8 +95,8 @@ export class HuoziEngine {
             if (g.x + g.width > maxX) maxX = g.x + g.width;
         });
         const contentWidth = (gridSize + xInterval) * (column + 1);
-        canvasWidth = Math.max(maxX, contentWidth) + padding * 2;
-        canvasHeight = maxY + padding * 2;
+        canvasWidth = Math.max(maxX, contentWidth) + padding.left + padding.right;
+        canvasHeight = maxY + padding.top + padding.bottom;
     }
 
     canvas.width = canvasWidth * dpr;
@@ -118,17 +119,17 @@ export class HuoziEngine {
         
         ctx.strokeStyle = '#cbd5e1';
         ctx.setLineDash([5, 5]);
-        ctx.strokeRect(padding, padding, pageWidth - padding * 2, pageHeight - padding * 2);
+        ctx.strokeRect(padding.left, padding.top, pageWidth - padding.left - padding.right, pageHeight - padding.top - padding.bottom);
         
         ctx.strokeStyle = '#e2e8f0';
         ctx.setLineDash([]);
-        const totalContentWidth = pageWidth - (padding * 2);
+        const totalContentWidth = pageWidth - (padding.left + padding.right);
         const allGaps = (layoutColumnCount - 1) * layoutColumnGap;
         const singleColumnWidth = (totalContentWidth - allGaps) / layoutColumnCount;
         
         for(let i=0; i<layoutColumnCount; i++) {
-             const colX = padding + i * (singleColumnWidth + layoutColumnGap);
-             ctx.strokeRect(colX, padding, singleColumnWidth, pageHeight - padding * 2);
+             const colX = padding.left + i * (singleColumnWidth + layoutColumnGap);
+             ctx.strokeRect(colX, padding.top, singleColumnWidth, pageHeight - padding.top - padding.bottom);
         }
     }
 
@@ -144,8 +145,8 @@ export class HuoziEngine {
 
       ctx.font = `${glyph.fontSize}px ${this.options.fontFamily}`;
       
-      const drawX = glyph.x + padding;
-      const drawY = glyph.y + padding;
+      const drawX = glyph.x + padding.left;
+      const drawY = glyph.y + padding.top;
 
       ctx.fillText(glyph.character, drawX, drawY + glyph.height / 2);
 
@@ -157,6 +158,13 @@ export class HuoziEngine {
   }
 
   // --- Internals ---
+
+  private resolvePadding(padding: number | { top: number, right: number, bottom: number, left: number }) {
+    if (typeof padding === 'number') {
+        return { top: padding, right: padding, bottom: padding, left: padding };
+    }
+    return padding;
+  }
 
   private isCJK(text: string): boolean {
     return HuoziEngine.CJK_REGEX.test(text);
@@ -258,9 +266,11 @@ export class HuoziEngine {
       fontFamily, gridSize, column: charsPerLine, xInterval, yInterval,
       inlineCompression, forceGridAlignment, westernCharacterFirst,
       forceSpaceBetweenCJKAndWestern, fixLeftQuote,
-      enablePagination, pageHeight, padding, layoutColumnCount, layoutColumnGap, row: maxRows
+      enablePagination, pageHeight, layoutColumnCount, layoutColumnGap, row: maxRows
     } = this.options;
     
+    // Resolve padding here
+    const padding = this.resolvePadding(this.options.padding);
     const effectiveMaxRows = maxRows ?? Infinity;
 
     let currentX = 0; 
@@ -286,7 +296,8 @@ export class HuoziEngine {
     }
     const FLAG_STDWIDTH = this.measureCtx ? this.measureCtx.measureText('中').width === 18 : true;
 
-    const contentHeight = enablePagination ? (pageHeight - padding * 2) : Infinity;
+    // Use resolved padding
+    const contentHeight = enablePagination ? (pageHeight - padding.top - padding.bottom) : Infinity;
 
     const wrapLine = () => {
       currentX = 0;
