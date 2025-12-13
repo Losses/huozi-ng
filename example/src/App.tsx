@@ -36,10 +36,9 @@ const NumberControl: React.FC<NumberControlProps> = ({ label, value, onChange, m
   <div className={`mb-3 ${disabled ? 'opacity-50' : ''} ${className}`}>
     <div className="flex justify-between items-center mb-1">
         <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">
-            {label}
+            {label} {suffix ? `(${suffix})` : ""}
             {disabled && <Lock size={10} className="text-gray-400" />}
         </label>
-        <span className="text-xs text-gray-400 font-mono">{value}{suffix}</span>
     </div>
     <div className="flex gap-2 items-center">
         <input
