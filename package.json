@@ -22,7 +22,7 @@
     "dev": "bun --hot example/server.ts",
     "build": "bun run build.ts",
     "prepublishOnly": "bun run build",
-    "build-example": "bun build ./example/src/main.tsx --outdir ./dist/example"
+    "build-example": "bun run build-example.ts"
   },
   "peerDependencies": {
     "react": "^19"
