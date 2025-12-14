@@ -222,15 +222,6 @@ export default function HuoziApp() {
               <h2 className="font-bold text-lg">Configuration</h2>
             </div>
             
-            <ControlGroup label="Presets">
-                <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => setText(SAMPLE_TEXTS.beiying)} className="px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 border rounded transition-colors text-left">📜 Classic</button>
-                    <button onClick={() => setText(SAMPLE_TEXTS.mixed)} className="px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 border rounded transition-colors text-left">🎌 Mixed CJK</button>
-                    <button onClick={() => setText(SAMPLE_TEXTS.lorem)} className="px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 border rounded transition-colors text-left">🔤 Western</button>
-                    <button onClick={() => setText(SAMPLE_TEXTS.emoji)} className="px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 border rounded transition-colors text-left">✨ Emoji</button>
-                </div>
-            </ControlGroup>
-
             <ControlGroup label="Typography">
                 <NumberControl 
                     label="Text Size" 
@@ -343,6 +334,12 @@ export default function HuoziApp() {
                 value={text}
                 onChange={e => setText(e.target.value)}
             />
+            <div className="flex gap-2 justify-end mt-2">
+                <button onClick={() => setText(SAMPLE_TEXTS.beiying)} className="px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 border rounded transition-colors text-left">📜 Classic</button>
+                <button onClick={() => setText(SAMPLE_TEXTS.mixed)} className="px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 border rounded transition-colors text-left">🎌 Mixed CJK</button>
+                <button onClick={() => setText(SAMPLE_TEXTS.lorem)} className="px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 border rounded transition-colors text-left">🔤 Western</button>
+                <button onClick={() => setText(SAMPLE_TEXTS.emoji)} className="px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 border rounded transition-colors text-left">✨ Emoji</button>
+            </div>
           </div>
             <div className="bg-white p-1 rounded-xl shadow-lg border border-gray-200 overflow-hidden" ref={containerRef}>            
                 {/* Scrollable Area */}
