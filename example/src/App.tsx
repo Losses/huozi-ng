@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
 import { Settings, Type, LayoutTemplate, ChevronLeft, ChevronRight, FileText, Lock, Globe } from 'lucide-react';
 import { useHuoziEngine } from '../../src/react';
 import { type LayoutOptions, DEFAULT_OPTIONS } from '../../src/core';
@@ -32,7 +32,7 @@ interface NumberControlProps {
     className?: string;
 }
 
-const NumberControl: React.FC<NumberControlProps> = ({ label, value, onChange, min, max, step = 1, disabled = false, suffix = '', className = '' }) => (
+const NumberControl = memo<NumberControlProps>(({ label, value, onChange, min, max, step = 1, disabled = false, suffix = '', className = '' }) => (
   <div className={`mb-3 ${disabled ? 'opacity-50' : ''} ${className}`}>
     <div className="flex justify-between items-center mb-1">
         <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">
@@ -63,14 +63,18 @@ const NumberControl: React.FC<NumberControlProps> = ({ label, value, onChange, m
         />
     </div>
   </div>
-);
+));
 
-const ControlGroup = ({ label, children }: { label: string, children: React.ReactNode }) => (
+NumberControl.displayName = 'NumberControl';
+
+const ControlGroup = memo<{ label: string, children: React.ReactNode }>(({ label, children }) => (
   <div className="flex flex-col gap-1 mb-5 border-b border-gray-100 pb-3 last:border-0">
     <label className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">{label}</label>
     {children}
   </div>
-);
+));
+
+ControlGroup.displayName = 'ControlGroup';
 
 // --- Sample Data ---
 const SAMPLE_TEXTS = {
@@ -99,7 +103,7 @@ export default function HuoziApp() {
   const [pageWidth, setPageWidth] = useState(800);
   
   // Padding State (Split)
-  const defaultPadding = DEFAULT_OPTIONS.padding as { top: number, right: number, bottom: number, left: number };
+  const defaultPadding = useMemo(() => DEFAULT_OPTIONS.padding as { top: number, right: number, bottom: number, left: number }, []);
   const [paddingTop, setPaddingTop] = useState(defaultPadding.top);
   const [paddingRight, setPaddingRight] = useState(defaultPadding.right);
   const [paddingBottom, setPaddingBottom] = useState(defaultPadding.bottom);
@@ -148,6 +152,48 @@ export default function HuoziApp() {
         padding: currentPadding
     };
   }, [gridSize, columns, compress, fontFamily, enablePagination, pageHeight, pageWidth, layoutColumnCount, layoutColumnGap, paddingTop, paddingRight, paddingBottom, paddingLeft]);
+
+  // Memoized callback groups
+  const textHandlers = useMemo(() => ({
+    handleTextChange: (newText: string) => setText(newText),
+    handleSampleTextChange: (sample: keyof typeof SAMPLE_TEXTS) => setText(SAMPLE_TEXTS[sample]),
+  }) as const, []);
+
+  const typographyHandlers = useMemo(() => ({
+    handleFontSizeChange: (size: number) => setFontSize(size),
+    handleGridSizeChange: (size: number) => setGridSize(size),
+    handleFontFamilyChange: (e: React.ChangeEvent<HTMLSelectElement>) => setFontFamily(e.target.value),
+  }) as const, []);
+
+  const layoutHandlers = useMemo(() => ({
+    handleColumnsChange: (cols: number) => setColumns(cols),
+    handleShowStrokeChange: (checked: boolean) => setShowStroke(checked),
+    handleCompressChange: (checked: boolean) => setCompress(checked),
+  }) as const, []);
+
+  const paginationHandlers = useMemo(() => ({
+    handleEnablePaginationChange: (checked: boolean) => setEnablePagination(checked),
+    handlePageWidthChange: (width: number) => setPageWidth(width),
+    handlePageHeightChange: (height: number) => setPageHeight(height),
+    handleLayoutColumnCountChange: (count: number) => setLayoutColumnCount(count),
+    handleLayoutColumnGapChange: (gap: number) => setLayoutColumnGap(gap),
+  }) as const, []);
+
+  const paddingHandlers = useMemo(() => ({
+    handlePaddingTopChange: (value: number) => setPaddingTop(value),
+    handlePaddingBottomChange: (value: number) => setPaddingBottom(value),
+    handlePaddingLeftChange: (value: number) => setPaddingLeft(value),
+    handlePaddingRightChange: (value: number) => setPaddingRight(value),
+  }) as const, []);
+
+  const featureHandlers = useMemo(() => ({
+    handleEnableGoogleFontsChange: (checked: boolean) => setEnableGoogleFonts(checked),
+  }) as const, []);
+
+  const navigationHandlers = useMemo(() => ({
+    handlePrevPage: () => setViewPage(p => Math.max(1, p - 1)),
+    handleNextPage: () => setViewPage(p => Math.min(totalPages, p + 1)),
+  }) as const, [totalPages]);
 
   // Inject Google Fonts (Updated to depend on switch)
   useEffect(() => {
@@ -223,16 +269,16 @@ export default function HuoziApp() {
             </div>
             
             <ControlGroup label="Typography">
-                <NumberControl 
-                    label="Text Size" 
-                    value={fontSize} 
-                    onChange={setFontSize} 
+                <NumberControl
+                    label="Text Size"
+                    value={fontSize}
+                    onChange={typographyHandlers.handleFontSizeChange}
                     min={12} max={96} suffix="px"
                 />
-                <NumberControl 
-                    label="Grid Size" 
-                    value={gridSize} 
-                    onChange={setGridSize} 
+                <NumberControl
+                    label="Grid Size"
+                    value={gridSize}
+                    onChange={typographyHandlers.handleGridSizeChange}
                     min={12} max={96} suffix="px"
                 />
                 <div className="mt-4">
@@ -240,7 +286,7 @@ export default function HuoziApp() {
                     <select
                         className="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
                         value={fontFamily}
-                        onChange={e => setFontFamily(e.target.value)}
+                        onChange={typographyHandlers.handleFontFamilyChange}
                     >
                         {FONT_PRESETS.map((font, idx) => (
                             <option key={idx} value={font.value}>{font.label}</option>
@@ -250,11 +296,11 @@ export default function HuoziApp() {
             </ControlGroup>
 
             <ControlGroup label="Layout">
-                <NumberControl 
-                    label={enablePagination ? "Chars / Line (Auto)" : "Chars / Line"} 
-                    value={options.column} 
-                    onChange={setColumns} 
-                    min={10} max={60} 
+                <NumberControl
+                    label={enablePagination ? "Chars / Line (Auto)" : "Chars / Line"}
+                    value={options.column}
+                    onChange={layoutHandlers.handleColumnsChange}
+                    min={10} max={60}
                     disabled={enablePagination}
                 />
             </ControlGroup>
@@ -265,37 +311,37 @@ export default function HuoziApp() {
                     <h2 className="font-bold text-sm">Page & Columns</h2>
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer mb-4">
-                    <input type="checkbox" checked={enablePagination} onChange={e => setEnablePagination(e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500"/>
+                    <input type="checkbox" checked={enablePagination} onChange={e => paginationHandlers.handleEnablePaginationChange(e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500"/>
                     <span className="text-sm font-semibold">Enable Pagination</span>
                 </label>
 
                 {enablePagination && (
                     <div className="space-y-1 bg-gray-50 p-3 rounded-md border border-gray-200">
-                        <NumberControl label="Page Width" value={pageWidth} onChange={setPageWidth} min={300} max={1200} step={10} suffix="px"/>
-                        <NumberControl label="Page Height" value={pageHeight} onChange={setPageHeight} min={300} max={1600} step={10} suffix="px"/>
-                        
+                        <NumberControl label="Page Width" value={pageWidth} onChange={paginationHandlers.handlePageWidthChange} min={300} max={1200} step={10} suffix="px"/>
+                        <NumberControl label="Page Height" value={pageHeight} onChange={paginationHandlers.handlePageHeightChange} min={300} max={1600} step={10} suffix="px"/>
+
                         <div className="border-t border-gray-200 my-3"></div>
                         <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">Padding</label>
                         <div className="flex flex-col gap-1">
-                            <NumberControl label="Top" value={paddingTop} onChange={setPaddingTop} min={0} max={200} step={5} className="mb-0" />
-                            <NumberControl label="Bottom" value={paddingBottom} onChange={setPaddingBottom} min={0} max={200} step={5} className="mb-0" />
-                            <NumberControl label="Left" value={paddingLeft} onChange={setPaddingLeft} min={0} max={200} step={5} className="mb-0" />
-                            <NumberControl label="Right" value={paddingRight} onChange={setPaddingRight} min={0} max={200} step={5} className="mb-0" />
+                            <NumberControl label="Top" value={paddingTop} onChange={paddingHandlers.handlePaddingTopChange} min={0} max={200} step={5} className="mb-0" />
+                            <NumberControl label="Bottom" value={paddingBottom} onChange={paddingHandlers.handlePaddingBottomChange} min={0} max={200} step={5} className="mb-0" />
+                            <NumberControl label="Left" value={paddingLeft} onChange={paddingHandlers.handlePaddingLeftChange} min={0} max={200} step={5} className="mb-0" />
+                            <NumberControl label="Right" value={paddingRight} onChange={paddingHandlers.handlePaddingRightChange} min={0} max={200} step={5} className="mb-0" />
                         </div>
 
                         <div className="border-t border-gray-200 my-3"></div>
-                        <NumberControl label="Text Columns" value={layoutColumnCount} onChange={setLayoutColumnCount} min={1} max={4} step={1}/>
-                        <NumberControl label="Column Gap" value={layoutColumnGap} onChange={setLayoutColumnGap} min={0} max={100} step={5} suffix="px"/>
+                        <NumberControl label="Text Columns" value={layoutColumnCount} onChange={paginationHandlers.handleLayoutColumnCountChange} min={1} max={4} step={1}/>
+                        <NumberControl label="Column Gap" value={layoutColumnGap} onChange={paginationHandlers.handleLayoutColumnGapChange} min={0} max={100} step={5} suffix="px"/>
                     </div>
                 )}
                 {!enablePagination && (
                     <div className="space-y-1 bg-gray-50 p-3 rounded-md border border-gray-200">
                         <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">Padding</label>
                         <div className="flex flex-col gap-1">
-                            <NumberControl label="Top" value={paddingTop} onChange={setPaddingTop} min={0} max={200} step={5} className="mb-0" />
-                            <NumberControl label="Bottom" value={paddingBottom} onChange={setPaddingBottom} min={0} max={200} step={5} className="mb-0" />
-                            <NumberControl label="Left" value={paddingLeft} onChange={setPaddingLeft} min={0} max={200} step={5} className="mb-0" />
-                            <NumberControl label="Right" value={paddingRight} onChange={setPaddingRight} min={0} max={200} step={5} className="mb-0" />
+                            <NumberControl label="Top" value={paddingTop} onChange={paddingHandlers.handlePaddingTopChange} min={0} max={200} step={5} className="mb-0" />
+                            <NumberControl label="Bottom" value={paddingBottom} onChange={paddingHandlers.handlePaddingBottomChange} min={0} max={200} step={5} className="mb-0" />
+                            <NumberControl label="Left" value={paddingLeft} onChange={paddingHandlers.handlePaddingLeftChange} min={0} max={200} step={5} className="mb-0" />
+                            <NumberControl label="Right" value={paddingRight} onChange={paddingHandlers.handlePaddingRightChange} min={0} max={200} step={5} className="mb-0" />
                         </div>
                     </div>
                 )}
@@ -304,15 +350,15 @@ export default function HuoziApp() {
             <ControlGroup label="Debug & Features">
                 <div className="space-y-2">
                     <label className="flex items-center gap-2 cursor-pointer text-indigo-700">
-                        <input type="checkbox" checked={enableGoogleFonts} onChange={e => setEnableGoogleFonts(e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500"/>
+                        <input type="checkbox" checked={enableGoogleFonts} onChange={e => featureHandlers.handleEnableGoogleFontsChange(e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500"/>
                         <span className="text-sm font-semibold flex items-center gap-1"><Globe size={14}/> Load Google Fonts</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" checked={showStroke} onChange={e => setShowStroke(e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500"/>
+                        <input type="checkbox" checked={showStroke} onChange={e => layoutHandlers.handleShowStrokeChange(e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500"/>
                         <span className="text-sm">Show Grid Bounds</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" checked={compress} onChange={e => setCompress(e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500"/>
+                        <input type="checkbox" checked={compress} onChange={e => layoutHandlers.handleCompressChange(e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500"/>
                         <span className="text-sm">Punctuation Compression</span>
                     </label>
                 </div>
@@ -329,16 +375,16 @@ export default function HuoziApp() {
               <Type size={20} />
               <h2 className="font-bold text-lg">Input Text</h2>
             </div>
-            <textarea 
+            <textarea
                 className="w-full h-40 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm font-sans"
                 value={text}
-                onChange={e => setText(e.target.value)}
+                onChange={e => textHandlers.handleTextChange(e.target.value)}
             />
             <div className="flex gap-2 justify-end mt-2">
-                <button onClick={() => setText(SAMPLE_TEXTS.beiying)} className="px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 border rounded transition-colors text-left">📜 Classic</button>
-                <button onClick={() => setText(SAMPLE_TEXTS.mixed)} className="px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 border rounded transition-colors text-left">🎌 Mixed CJK</button>
-                <button onClick={() => setText(SAMPLE_TEXTS.lorem)} className="px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 border rounded transition-colors text-left">🔤 Western</button>
-                <button onClick={() => setText(SAMPLE_TEXTS.emoji)} className="px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 border rounded transition-colors text-left">✨ Emoji</button>
+                <button onClick={() => textHandlers.handleSampleTextChange('beiying')} className="px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 border rounded transition-colors text-left">📜 Classic</button>
+                <button onClick={() => textHandlers.handleSampleTextChange('mixed')} className="px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 border rounded transition-colors text-left">🎌 Mixed CJK</button>
+                <button onClick={() => textHandlers.handleSampleTextChange('lorem')} className="px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 border rounded transition-colors text-left">🔤 Western</button>
+                <button onClick={() => textHandlers.handleSampleTextChange('emoji')} className="px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 border rounded transition-colors text-left">✨ Emoji</button>
             </div>
           </div>
             <div className="bg-white p-1 rounded-xl shadow-lg border border-gray-200 overflow-hidden" ref={containerRef}>            
@@ -355,15 +401,15 @@ export default function HuoziApp() {
                             Page {viewPage} of {totalPages}
                          </div>
                          <div className="flex gap-2">
-                             <button 
-                                onClick={() => setViewPage(p => Math.max(1, p - 1))}
+                             <button
+                                onClick={navigationHandlers.handlePrevPage}
                                 disabled={viewPage === 1}
                                 className="p-2 bg-white border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                              >
                                 <ChevronLeft size={20} />
                              </button>
-                             <button 
-                                onClick={() => setViewPage(p => Math.min(totalPages, p + 1))}
+                             <button
+                                onClick={navigationHandlers.handleNextPage}
                                 disabled={viewPage === totalPages}
                                 className="p-2 bg-white border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                              >
